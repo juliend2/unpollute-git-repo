@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 // Use it like so:
-// php unpollute.php directory/to/keep/clean
+// php bin/unpollute.php directory/to/keep/clean
 
 // Depends on:
 // git version 2.30.1
@@ -74,9 +74,12 @@ if (! $path ) {
 }
 
 // $git = '/usr/local/cpanel/3rdparty/lib/path-bin/git';
-$git = '/usr/bin/git';
+
+if (getenv('GIT_BIN_PATH')) {
+    $git = getenv('GIT_BIN_PATH');
+} else {
+    $git = '/usr/bin/git'; 
+}
 
 $unpolluter = new Unpollute($path, $git);
 $unpolluter->execute();
-
-// php bin/unpollute.php /home/julien/mysqlmigrator
