@@ -11,9 +11,19 @@ final class GitOutputParserTest extends TestCase
     private static $changes_and_untracked;
     private static $changes_only;
     private static $changes_with_different_output;
+    private static $only_untracked;
 
     public static function setUpBeforeClass(): void
     {
+
+        self::$only_untracked = <<<TXT
+On branch master
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+        testfile.txt
+        testfolder/
+TXT;
+
         self::$changes_and_untracked = <<<TXT
 On branch master
 Your branch is up to date with 'origin/master'.
@@ -119,6 +129,16 @@ TXT;
         $test_output = self::$changes_with_different_output;
          $this->assertEquals(
             0,
+            count(GitOutputParser::get_untracked_files($test_output))
+        );
+    }
+
+    
+    public function testUntrackedCandidatesInUntrackedOnly(): void
+    {
+        $test_output = self::$only_untracked;
+        $this->assertEquals(
+            2,
             count(GitOutputParser::get_untracked_files($test_output))
         );
     }

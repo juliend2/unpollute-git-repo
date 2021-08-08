@@ -42,6 +42,11 @@ class GitOutputParser
         
     // Returns array
     function get_untracked_files($str) {
+        $str = trim($str);
+        // Remove the first line if it's "On branch master" or something like that:
+        $str = preg_replace('/^(On branch \w+)/', '', $str, 1);
+        $str = trim($str);
+
         $split_git_output = preg_split ( '/\n{2}/' , $str );
 
         // Changes not staged for commit AND Untracked files:
