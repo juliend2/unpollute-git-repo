@@ -6,63 +6,52 @@ use Julien\GitOutputParser;
 
 class Unpollute 
 {
-    public function __construct() {
-        
+
+    private $repo_path;
+    private $git_bin;
+
+    public function __construct($repo_path, $git_bin) {
+        $this->path = $repo_path;
+        $this->git = $git_bin;
     }
 
-
-    // Returns array
-    public static function get_checkout_candidates($str) {
-            $split_git_output = preg_split ( '/\n{2}/' , $str );
-            var_dump($split_git_output);
-            // Changes not staged for commit AND Untracked files:
-            foreach ($split_git_output as $i => $output_part) {
-                    var_dump($output_part);
-                    if ( str_starts_with($output_part , 'Changes not staged for commit:')) {
-                            $lines = preg_split ( '/\n/' , $output_part );
-                            $lines_array = [];
-                            array_shift( $lines ); // remove first line
-                            array_shift( $lines ); // remove second line
-                            array_shift( $lines ); // remove third line
-                            foreach ($lines as $line) {
-                                    $lines_array []= ltrim(preg_split('/:/', ltrim($line), 2)[1]);
-                            }
-                            return $lines_array;
-                    // } elseif ( str_starts_with($output_part, 'On branch master') ) {
-                    //      $lines = preg_split ( '/\n/' , $output_part );
-                    //      $lines_array = [];
-                    //      array_shift( $lines ); // remove first line
-                    //      array_shift( $lines ); // remove second line
-                    //      array_shift( $lines ); // remove third line
-                    //      array_shift( $lines ); // remove fourth line
-                    //      foreach ($lines as $line) {
-                    //              $lines_array []= ltrim(preg_split('/:/', ltrim($line), 2)[1]);
-                    //      }
-                    //      return $lines_array;
-                    }
-            }
-            return false;
+    private function execute_command( $cmd ) {
+        ob_start();
+        system($cmd, $status_code) ;
+        $out = ob_get_contents();
+        ob_end_clean();
+        return [$out, $status_code];
     }
 
-        
-    // Returns array
-    function get_untracked_files($str) {
-            $split_git_output = preg_split ( '/\n{2}/' , $str );
-
-            // Changes not staged for commit AND Untracked files:
-            foreach ($split_git_output as $output_part) {
-                    if ( str_starts_with($output_part , 'Untracked files:') ) {
-                            $lines = preg_split ( '/\n/' , $output_part );
-                            $lines_array = [];
-                            array_shift( $lines ); // remove first line
-                            array_shift( $lines ); // remove second line
-                            foreach ($lines as $line) {
-                                    $lines_array []= ltrim($line);
-                            }
-                            return $lines_array;
-                    }
-            }
-            return false;
+    private function fix_git_index_and_exit($path) {
+        echo "whooops";
+        system("cd $path && rm -f ./.git/index.lock");
+        exit(1); // problem
     }
+
+    public function execute() {
+        $git_status = self::execute_command( "cd $this->path && $this->git status" );
+        $git_status_output = $git_status[0];
+        $git_status_code = $git_status[1]; // status code
+
+        if ($git_status_code !== 0) {
+                $this->fix_git_index_and_exit($this->path);
+        }
+
+        $to_checkout = GitOutputParser::get_checkout_candidates($git_status_output);
+        $to_remove = GitOutputParser::get_untracked_files($git_status_output);
+
+        foreach ($to_checkout as $f) {
+                system("cd $this->path && $this->git checkout ".escapeshellarg($f), $git_status_code);
+                if ($git_status_code !== 0) {
+                        $this->fix_git_index_and_exit($this->path);
+                }
+        }
+
+        foreach ($to_remove as $f) {
+                system("cd $this->path && rm -rf ".escapeshellarg($f));
+        }
+
+    } 
 
 }
