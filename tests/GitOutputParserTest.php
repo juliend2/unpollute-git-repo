@@ -8,10 +8,13 @@ use Julien\GitOutputParser;
 final class GitOutputParserTest extends TestCase
 {
 
+    private static $changes_and_untracked;
+    private static $changes_only;
+    private static $changes_with_different_output;
 
-    public function testCheckoutCandidatesInChangesAndUntrackedFilesContext(): void
+    public static function setUpBeforeClass(): void
     {
-        $test_output = <<<TXT
+        self::$changes_and_untracked = <<<TXT
 On branch master
 Your branch is up to date with 'origin/master'.
 
@@ -28,17 +31,8 @@ Untracked files:
 
 no changes added to commit (use "git add" and/or "git commit -a")
 TXT;
-        $test_output = trim($test_output);
 
-        $this->assertEquals(
-            2,
-            count(GitOutputParser::get_checkout_candidates($test_output))
-        );
-    }
-
-    public function testCheckoutCandidatesInChangesOnly(): void 
-    {
-        $test_output = <<<TXT
+        self::$changes_only = <<<TXT
 On branch master
 Changes not staged for commit:
   (use "git add/rm <file>..." to update what will be committed)
@@ -49,17 +43,8 @@ Changes not staged for commit:
 
 no changes added to commit (use "git add" and/or "git commit -a")
 TXT;
-        $test_output = trim($test_output);
 
-        $this->assertEquals(
-            3,
-            count(GitOutputParser::get_checkout_candidates($test_output))
-        );
-    }
-
-    public function testCheckoutCandidatesInChangesOnlyButDifferent(): void
-    {
-        $test_output = <<<TXT
+        self::$changes_with_different_output = <<<TXT
 On branch master
 Your branch is up to date with 'origin/master'.
 
@@ -71,9 +56,70 @@ Changes not staged for commit:
 
 no changes added to commit (use "git add" and/or "git commit -a")
 TXT;
+    }
+
+
+    public function testCheckoutCandidatesInChangesAndUntrackedFilesContext(): void
+    {
+        $test_output = self::$changes_and_untracked;
+        $test_output = trim($test_output);
+
+        $this->assertEquals(
+            2,
+            count(GitOutputParser::get_checkout_candidates($test_output))
+        );
+    }
+
+    public function testCheckoutCandidatesInChangesOnly(): void 
+    {
+        $test_output = self::$changes_only;
+        $test_output = trim($test_output);
+
+        $this->assertEquals(
+            3,
+            count(GitOutputParser::get_checkout_candidates($test_output))
+        );
+    }
+
+    public function testCheckoutCandidatesInChangesOnlyButDifferent(): void
+    {
+        $test_output = self::$changes_with_different_output;
          $this->assertEquals(
             2,
             count(GitOutputParser::get_checkout_candidates($test_output))
+        );
+    }
+
+
+    
+    public function testUntrackedCandidatesInChangesAndUntrackedFilesContext(): void
+    {
+        $test_output = self::$changes_and_untracked;
+        $test_output = trim($test_output);
+
+        $this->assertEquals(
+            2,
+            count(GitOutputParser::get_untracked_files($test_output))
+        );
+    }
+
+    public function testUntrackedCandidatesInChangesOnly(): void 
+    {
+        $test_output = self::$changes_only;
+        $test_output = trim($test_output);
+
+        $this->assertEquals(
+            0,
+            count(GitOutputParser::get_untracked_files($test_output))
+        );
+    }
+
+    public function testUntrackedCandidatesInChangesOnlyButDifferent(): void
+    {
+        $test_output = self::$changes_with_different_output;
+         $this->assertEquals(
+            0,
+            count(GitOutputParser::get_untracked_files($test_output))
         );
     }
 }

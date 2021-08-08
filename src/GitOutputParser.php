@@ -36,7 +36,7 @@ class GitOutputParser
                         return $lines_array;
                 }
         }
-        return false;
+        return [];
     }
 
         
@@ -57,7 +57,7 @@ class GitOutputParser
                         return $lines_array;
                 }
         }
-        return false;
+        return [];
     }
     
 }
