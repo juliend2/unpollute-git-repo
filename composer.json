@@ -1,0 +1,24 @@
+{
+    "name": "juliend2/unpollute",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Julien Desrosiers",
+            "email": "julien@desrosiers.org"
+        }
+    ],
+    "description": "Unpollute Git repositories",
+    "license": "MIT",
+    "scripts": {
+        "test": "phpunit tests"
+    },
+    "autoload": {
+        "psr-4": {
+            "Julien\\": "src",
+            "Julien\\Tests\\": "tests"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^7"
+    }
+}
